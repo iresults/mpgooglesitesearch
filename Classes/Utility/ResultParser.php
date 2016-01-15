@@ -31,8 +31,8 @@
  * @license http://www.gnu.org/licenses/gpl.html GNU General Public License, version 3 or later
  *
  */
-class Tx_Mpgooglesitesearch_Utility_ResultParser {
-
+class Tx_Mpgooglesitesearch_Utility_ResultParser
+{
     /**
      * The search result XML that gets returned by google
      *
@@ -49,62 +49,40 @@ class Tx_Mpgooglesitesearch_Utility_ResultParser {
      * @param int    $resultsPerPage the number of results we want from Google
      * @param string $cseNumber      the Google Site Search ID
      * @param string $language       the language the search in
-     * @param string $countrycode    the country for which we want Google to prioritize the results
+     * @param string $countryCode    the country for which we want Google to prioritize the results
      *
      * @throws Exception
      *
      * @return void
      */
-    public function fetchXml($query, $start, $resultsPerPage, $cseNumber, $language, $countrycode) {
+    public function fetchXml($query, $start, $resultsPerPage, $cseNumber, $language, $countryCode)
+    {
+        $url = 'http://www.google.com/search?client=google-csbe&output=xml_no_dtd'.
+            '&cr=country'.$countryCode.
+            '&lr=lang_'.$language.
+            '&cx='.$cseNumber.
+            '&start='.$start.
+            '&num='.$resultsPerPage.
+            '&q='.urlencode($query);
 
-        $url = 'http://www.google.com/search?client=google-csbe&output=xml_no_dtd' .
-            '&cr=country' . $countrycode .
-            '&lr=lang_' . $language .
-            '&cx=' . $cseNumber .
-            '&start=' . $start .
-            '&num=' . $resultsPerPage .
-            '&q=' . urlencode($query);
-
-        $status = FALSE;
-
-        if (ini_get('allow_url_fopen') == 1) {
-            $method = 'file_get_contents';
-            $searchResultString = file_get_contents($url);
-
-            if (strstr($http_response_header['0'], '200 OK') !== FALSE) {
-                $status = TRUE;
-            }
-
+        /** @var \TYPO3\CMS\Core\Http\HttpRequest $request */
+        $request = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+            'TYPO3\\CMS\\Core\\Http\\HttpRequest',
+            $url
+        );
+        try {
+            $result = $request->send();
+        } catch (Exception $exception) {
+            throw new Exception('Error while fetching the XML, please check your configuration', 1452854243, $exception);
         }
 
-        if (!$status && function_exists('curl_init')) {
-            $method = 'curl';
-            $curlSession = curl_init();
-
-            curl_setopt($curlSession, CURLOPT_URL, $url);
-            curl_setopt($curlSession, CURLOPT_CONNECTTIMEOUT, 30);
-            curl_setopt($curlSession, CURLOPT_RETURNTRANSFER, TRUE);
-
-            $searchResultString = curl_exec($curlSession);
-
-            if (curl_getinfo($curlSession, CURLINFO_HTTP_CODE) == 200) {
-                $status = TRUE;
-            }
-
-            curl_close($curlSession);
-        }
-
-        if (!isset($method)) {
-            throw new Exception('Neither cUrl nor allow_url_fopen allowed.');
-        }
-
-        if ($status && !empty($searchResultString)) {
-            $this->xml = DOMDocument::loadXML($searchResultString);
+        $searchResultString = $result->getBody();
+        if ($result->getStatus() && !empty($searchResultString)) {
+            $this->xml = new DOMDocument();
+            $this->xml->loadXML($searchResultString);
         } else {
-            throw new Exception('Error while fetching the XML with "' . $method . '", please check your configuration');
+            throw new Exception('Error while fetching the XML, please check your configuration');
         }
-
-
     }
 
     /**
@@ -114,7 +92,8 @@ class Tx_Mpgooglesitesearch_Utility_ResultParser {
      *
      * @return array
      */
-    public function getSearchResultArray() {
+    public function getSearchResultArray()
+    {
 
         if (empty($this->xml) || !($this->xml instanceof DomDocument)) {
             throw new Exception('No XML Loaded');
@@ -122,7 +101,7 @@ class Tx_Mpgooglesitesearch_Utility_ResultParser {
 
         $results = $this->xml->getElementsByTagName('R');
 
-        $resultArray = Array ();
+        $resultArray = Array();
         foreach ($results as $result) {
             /** @var $resultObject Tx_Mpgooglesitesearch_Domain_Model_Result */
             $resultObject = t3lib_div::makeInstance('Tx_Mpgooglesitesearch_Domain_Model_Result');
@@ -153,7 +132,7 @@ class Tx_Mpgooglesitesearch_Utility_ResultParser {
                         }
                     } elseif ($dataObj->getAttribute('type') == 'cse_thumbnail') {
                         // If there is a thumbnail, get the url and the dimensions
-                        $thumbnailArray = Array ();
+                        $thumbnailArray = Array();
                         foreach ($dataObj->getElementsByTagName('Attribute') as $attr) {
                             $thumbnailArray[$attr->getAttribute('name')] = $attr->getAttribute('value');
                         }
@@ -186,12 +165,13 @@ class Tx_Mpgooglesitesearch_Utility_ResultParser {
      *
      * @return array
      */
-    public function getGeneralInformation() {
+    public function getGeneralInformation()
+    {
 
         if (empty($this->xml) || !($this->xml instanceof DomDocument)) {
             throw new Exception('No XML Loaded');
         }
-        $general = Array ();
+        $general = Array();
 
         $general['numberOfResults'] = $this->xml->getElementsByTagName('M')->item(0)->nodeValue;
 
