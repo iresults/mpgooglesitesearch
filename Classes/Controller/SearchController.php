@@ -31,14 +31,15 @@
  * @license http://www.gnu.org/licenses/gpl.html GNU General Public License, version 3 or later
  *
  */
-class Tx_Mpgooglesitesearch_Controller_SearchController extends Tx_Extbase_MVC_Controller_ActionController {
-
+class Tx_Mpgooglesitesearch_Controller_SearchController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionController
+{
     /**
      * action index
      *
      * @return void
      */
-    public function indexAction() {
+    public function indexAction()
+    {
         // Nothing to do here, just display the view
     }
 
@@ -46,60 +47,69 @@ class Tx_Mpgooglesitesearch_Controller_SearchController extends Tx_Extbase_MVC_C
      * action search
      *
      * @param string $query the search query
-     * @param int $page  the page to display
+     * @param int    $page  the page to display
      *
      * @return void
      */
-    public function resultAction($query = '', $page = 0) {
-
-        if ($query == '') {
+    public function resultAction($query = null, $page = 0)
+    {
+        if ($query === null) {
             $this->redirect('index');
+
+            return;
         }
 
         $resultsPerPage = $this->settings['flexform']['resultsPerPage'];
         $start = $page * $resultsPerPage;
 
         if (!empty($query)) {
-            /** @var $resultParser Tx_Mpgooglesitesearch_Utility_ResultParser */
-            $resultParser = t3lib_div::makeInstance('Tx_Mpgooglesitesearch_Utility_ResultParser');
+            // Allow to get values from TypoScript setup
+            $typoscriptFrontend = $GLOBALS['TSFE'];
 
-            $cseNumber = $this->settings['flexform']['gssid'];
-            $language = $this->getLanguage($GLOBALS['TSFE']->sys_language_uid);
-            $countrycode = $this->getCountrycode($GLOBALS['TSFE']->sys_language_uid);
+            $typoscriptConfig = $typoscriptFrontend->tmpl->setup['config.'];
+            $cseNumber = $this->settings['flexform']['gssid'] ?: $typoscriptConfig['gssid'];
 
-            $resultParser->fetchXml($query, $start, $resultsPerPage, $cseNumber, $language, $countrycode);
+            $language = $typoscriptConfig['language'] ?:
+                $this->getLanguage($typoscriptFrontend->sys_language_uid);
+            $countryCode = $typoscriptConfig['countryCode'] ?:
+                $this->getCountrycode($typoscriptFrontend->sys_language_uid);
+
+            $resultParser = $this->getResultParser();
+            $resultParser->fetchXml((string)$query, $start, $resultsPerPage, $cseNumber, $language, $countryCode);
 
             $generalInformation = $resultParser->getGeneralInformation();
             $results = $resultParser->getSearchResultArray();
 
             if ($generalInformation['numberOfResults'] > $resultsPerPage) {
-                $pager = array ();
+                $pager = array();
 
                 $pager['showPageLinks'] = $this->settings['showPageLinks'] == 1;
                 if ($pager['showPageLinks']) {
-                    $pager['pages'] = $this->generatePageLinks(ceil($generalInformation['numberOfResults'] / $resultsPerPage), $page);
+                    $pager['pages'] = $this->generatePageLinks(
+                        ceil($generalInformation['numberOfResults'] / $resultsPerPage),
+                        $page
+                    );
 
                     if ($pager['pages'][0]['argument'] !== 0 && $this->settings['showFirstPageLink']) {
-                        $pager['showFirstPageLink'] = TRUE;
+                        $pager['showFirstPageLink'] = true;
                     }
                 }
 
                 if ($generalInformation['numberOfResults'] >= $start + $resultsPerPage) {
                     $pager['nextPage'] = $page + 1;
                 } else {
-                    $pager['nextPage'] = FALSE;
+                    $pager['nextPage'] = false;
                 }
 
                 if ($start > 0) {
                     $pager['prevPage'] = $page - 1;
-                    $pager['hasPrevPage'] = TRUE;
+                    $pager['hasPrevPage'] = true;
                 } else {
-                    $pager['hasPrevPage'] = FALSE;
+                    $pager['hasPrevPage'] = false;
                 }
 
                 $this->view->assign('pager', $pager);
             }
-
 
             if (count($results) == 0) {
                 $this->view->assign('noResultText', 'noSearchResults');
@@ -107,9 +117,7 @@ class Tx_Mpgooglesitesearch_Controller_SearchController extends Tx_Extbase_MVC_C
                 $this->view->assign('results', $results);
                 $this->view->assign('general', $generalInformation);
             }
-
             $this->view->assign('query', htmlspecialchars($query));
-
         } else {
             $this->view->assign('noResultText', 'emptyQuery');
         }
@@ -120,8 +128,8 @@ class Tx_Mpgooglesitesearch_Controller_SearchController extends Tx_Extbase_MVC_C
      *
      * @return void
      */
-    public function widgetAction() {
-
+    public function widgetAction()
+    {
         $this->view->assign('resultPageUid', $this->settings['flexform']['resultpage']);
     }
 
@@ -136,8 +144,8 @@ class Tx_Mpgooglesitesearch_Controller_SearchController extends Tx_Extbase_MVC_C
      *
      * @return array
      */
-    private function generatePageLinks($pageCount, $currentPage) {
-
+    private function generatePageLinks($pageCount, $currentPage)
+    {
         $pageLinkCount = intval($this->settings['pageLinkCount']);
 
         if ($currentPage < ceil($pageLinkCount / 2)) {
@@ -153,13 +161,16 @@ class Tx_Mpgooglesitesearch_Controller_SearchController extends Tx_Extbase_MVC_C
             }
         }
 
-        $pages = array ();
+        $pages = array();
         for ($i = $pagesStart; $i < $pagesEnd; $i++) {
-            array_push($pages, array (
-                                     'isCurrent' => $currentPage == $i,
-                                     'number'    => $i + 1,
-                                     'argument'  => $i
-                               ));
+            array_push(
+                $pages,
+                array(
+                    'isCurrent' => $currentPage == $i,
+                    'number'    => $i + 1,
+                    'argument'  => $i,
+                )
+            );
         }
 
         return $pages;
@@ -172,8 +183,8 @@ class Tx_Mpgooglesitesearch_Controller_SearchController extends Tx_Extbase_MVC_C
      *
      * @return string
      */
-    protected function getLanguage($languageUid) {
-
+    protected function getLanguage($languageUid)
+    {
         if (isset($this->settings['languages'][$languageUid]['shortcut'])) {
             $language = $this->settings['languages'][$languageUid]['shortcut'];
 
@@ -194,21 +205,26 @@ class Tx_Mpgooglesitesearch_Controller_SearchController extends Tx_Extbase_MVC_C
      *
      * @return string
      */
-    protected function getCountrycode($languageUid) {
-
+    protected function getCountrycode($languageUid)
+    {
         if (isset($this->settings['languages'][$languageUid]['countrycode'])) {
-            $countrycode = $this->settings['languages'][$languageUid]['countrycode'];
-
+            $countryCode = $this->settings['languages'][$languageUid]['countrycode'];
         } elseif (isset($this->settings['languages']['default']['countrycode'])) {
-            $countrycode = $this->settings['languages']['default']['countrycode'];
-
+            $countryCode = $this->settings['languages']['default']['countrycode'];
         } else {
-            $countrycode = 'uk';
+            $countryCode = 'uk';
         }
 
-        return $countrycode;
+        return $countryCode;
     }
 
+    /**
+     * @return Tx_Mpgooglesitesearch_Utility_ResultParser
+     */
+    protected function getResultParser()
+    {
+        return \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+            'Tx_Mpgooglesitesearch_Utility_ResultParser'
+        );
+    }
 }
-
-?>
