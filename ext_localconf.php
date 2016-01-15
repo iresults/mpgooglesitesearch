@@ -1,32 +1,28 @@
 <?php
 if (!defined('TYPO3_MODE')) {
-	die ('Access denied.');
+    die ('Access denied.');
 }
 
-Tx_Extbase_Utility_Extension::configurePlugin(
-	$_EXTKEY,
-	'Search',
-	array(
-		'Search' => 'index, result',
-		
-	),
-	// non-cacheable actions
-	array(
-		'Search' => 'result',
-	)
+\TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
+    $_EXTKEY,
+    'Search',
+    array(
+        'Search' => 'index, result',
+
+    ),
+    // non-cacheable actions
+    array(
+        'Search' => 'result',
+    )
 );
 
-Tx_Extbase_Utility_Extension::configurePlugin(
-	$_EXTKEY,
-	'Widget',
-	array(
-		'Search' => 'widget',
-		
-	),
-	// non-cacheable actions
-	array(
+\TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
+    $_EXTKEY,
+    'Widget',
+    array(
+        'Search' => 'widget',
 
-	)
+    ),
+    // non-cacheable actions
+    array()
 );
-
-?>

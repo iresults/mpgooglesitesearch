@@ -31,8 +31,8 @@ To use Google Site Search you will have to create an Account at http://www.googl
 	'version' => '0.9.0',
 	'constraints' => array(
 		'depends' => array(
-			'extbase' => '1.3.0',
-			'fluid' => '1.3.0',
+			'extbase' => '6.2.0',
+			'fluid' => '6.2.0',
 		),
 		'conflicts' => array(
 		),

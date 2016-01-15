@@ -31,8 +31,8 @@
  * @license http://www.gnu.org/licenses/gpl.html GNU General Public License, version 3 or later
  *
  */
-class Tx_Mpgooglesitesearch_Domain_Model_Result extends Tx_Extbase_DomainObject_AbstractEntity {
-
+class Tx_Mpgooglesitesearch_Domain_Model_Result extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity
+{
     /**
      * The title of the search result
      *
@@ -89,85 +89,83 @@ class Tx_Mpgooglesitesearch_Domain_Model_Result extends Tx_Extbase_DomainObject_
      */
     protected $mime;
 
-    public function setContent($content) {
-
+    public function setContent($content)
+    {
         $this->content = $content;
     }
 
-    public function getContent() {
-
+    public function getContent()
+    {
         return $this->content;
     }
 
-    public function setImage($image) {
-
+    public function setImage($image)
+    {
         $this->image = $image;
     }
 
-    public function getImage() {
-
+    public function getImage()
+    {
         return $this->image;
     }
 
-    public function setLastModified($lastModified) {
-
+    public function setLastModified($lastModified)
+    {
         $this->lastModified = $lastModified;
     }
 
-    public function getLastModified() {
-
+    public function getLastModified()
+    {
         return $this->lastModified;
     }
 
-    public function setPageSize($pageSize) {
-
+    public function setPageSize($pageSize)
+    {
         $this->pageSize = $pageSize;
     }
 
-    public function getPageSize() {
-
+    public function getPageSize()
+    {
         return $this->pageSize;
     }
 
-    public function setThumbnail($thumbnail) {
-
+    public function setThumbnail($thumbnail)
+    {
         $this->thumbnail = $thumbnail;
     }
 
-    public function getThumbnail() {
-
+    public function getThumbnail()
+    {
         return $this->thumbnail;
     }
 
-    public function setTitle($title) {
-
+    public function setTitle($title)
+    {
         $this->title = $title;
     }
 
-    public function getTitle() {
-
+    public function getTitle()
+    {
         return $this->title;
     }
 
-    public function setUrl($url) {
-
+    public function setUrl($url)
+    {
         $this->url = $url;
     }
 
-    public function getUrl() {
-
+    public function getUrl()
+    {
         return $this->url;
     }
 
-    public function setMime($mime) {
-
+    public function setMime($mime)
+    {
         $this->mime = $mime;
     }
 
-    public function getMime() {
-
+    public function getMime()
+    {
         return $this->mime;
     }
 }
-
-?>
